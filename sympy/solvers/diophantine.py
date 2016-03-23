@@ -10,7 +10,7 @@ from sympy.simplify.radsimp import rad_rationalize
 from sympy.utilities import default_sort_key, numbered_symbols
 from sympy.core.numbers import igcdex
 from sympy.ntheory.residue_ntheory import sqrt_mod
-from sympy.core.compatibility import range
+from sympy.core.compatibility import range, ordered
 from sympy.core.relational import Eq
 from sympy.solvers.solvers import check_assumptions
 
@@ -132,7 +132,7 @@ def merge_solution(var, var_t, solution):
     return tuple(l)
 
 
-def diop_solve(eq, param=symbols("t", integer=True)):
+def diop_solve(eq, param=symbols("t", integer=True), **kwargs):
     """
     Solves the diophantine equation ``eq``.
 
@@ -344,7 +344,7 @@ def classify_diop(eq):
         raise NotImplementedError("Still not implemented")
 
 
-def diop_linear(eq, param=symbols("t", integer=True)):
+def diop_linear(eq, param=symbols("t", integer=True), **kwargs):
     """
     Solves linear diophantine equations.
 
@@ -388,7 +388,11 @@ def diop_linear(eq, param=symbols("t", integer=True)):
     var, coeff, diop_type = classify_diop(eq)
 
     if diop_type == "linear":
-        return _diop_linear(var, coeff, param)
+		soln = _diop_linear(var, coeff, param)
+		if not "dict" in kwargs:
+			return soln
+		else:
+			return dict(zip(ordered(var), soln))
 
 
 def _diop_linear(var, coeff, param):
@@ -679,7 +683,7 @@ def divisible(a, b):
     return igcd(int(a), int(b)) == abs(int(b))
 
 
-def diop_quadratic(eq, param=symbols("t", integer=True)):
+def diop_quadratic(eq, param=symbols("t", integer=True), **kwargs):
     """
     Solves quadratic diophantine equations.
 
@@ -725,7 +729,9 @@ def diop_quadratic(eq, param=symbols("t", integer=True)):
     var, coeff, diop_type = classify_diop(eq)
 
     if diop_type == "binary_quadratic":
-        return _diop_quadratic(var, coeff, param)
+		solns = _diop_quadratic(var, coeff, param)
+		if "dict" in kwargs:
+			return dict(zip(vars, zip(*solns)))
 
 
 def _diop_quadratic(var, coeff, t):
@@ -950,7 +956,7 @@ def is_solution_quad(var, coeff, u, v):
     return _mexpand(Subs(eq, (x, y), (u, v)).doit()) == 0
 
 
-def diop_DN(D, N, t=symbols("t", integer=True)):
+def diop_DN(D, N, t=symbols("t", integer=True), **kwargs):
     """
     Solves the equation `x^2 - Dy^2 = N`.
 
@@ -1001,6 +1007,14 @@ def diop_DN(D, N, t=symbols("t", integer=True)):
         Robertson, July 31, 2004, Pages 16 - 17. [online], Available:
         http://www.jpr2718.org/pell.pdf
     """
+    s = _diop_DN(D, N, t=symbols("t", integer=True))
+    if not "dict" in kwargs:
+	    return s
+    else:
+		return dict(zip(vars, zip(*s)))
+
+
+def _diop_DN(D, N, t=symbols("t", integer=True)):
     if D < 0:
         if N == 0:
             return [(S.Zero, S.Zero)]
@@ -1696,7 +1710,7 @@ def check_param(x, y, a, t):
         return (None, None)
 
 
-def diop_ternary_quadratic(eq):
+def diop_ternary_quadratic(eq, **kwargs):
     """
     Solves the general quadratic ternary form,
     `ax^2 + by^2 + cz^2 + fxy + gyz + hxz = 0`.
@@ -1733,7 +1747,11 @@ def diop_ternary_quadratic(eq):
     var, coeff, diop_type = classify_diop(eq)
 
     if diop_type == "homogeneous_ternary_quadratic":
-        return _diop_ternary_quadratic(var, coeff)
+        s = _diop_ternary_quadratic(var, coeff)
+        if not "dict" in kwargs:
+            return s
+        else:
+            return dict(zip(ordered(var), soln))
 
 
 def _diop_ternary_quadratic(_var, coeff):
@@ -2012,7 +2030,7 @@ def _parametrize_ternary_quadratic(solution, _var, coeff):
     return x, y, z
 
 
-def diop_ternary_quadratic_normal(eq):
+def diop_ternary_quadratic_normal(eq, **kwargs):
     """
     Solves the quadratic ternary diophantine equation,
     `ax^2 + by^2 + cz^2 = 0`.
@@ -2043,7 +2061,11 @@ def diop_ternary_quadratic_normal(eq):
     var, coeff, diop_type = classify_diop(eq)
 
     if diop_type == "homogeneous_ternary_quadratic":
-        return _diop_ternary_quadratic_normal(var, coeff)
+        s = _diop_ternary_quadratic_normal(var, coeff)
+        if not "dict" in kwargs:
+            return s
+        else:
+            return dict(zip(ordered(var), soln))
 
 
 def _diop_ternary_quadratic_normal(var, coeff):
@@ -2438,7 +2460,7 @@ def holzer(x_0, y_0, z_0, a, b, c):
     return x_0, y_0, z_0
 
 
-def diop_general_pythagorean(eq, param=symbols("m", integer=True)):
+def diop_general_pythagorean(eq, param=symbols("m", integer=True), **kwargs):
     """
     Solves the general pythagorean equation,
     `a_{1}^2x_{1}^2 + a_{2}^2x_{2}^2 + . . . + a_{n}^2x_{n}^2 - a_{n + 1}^2x_{n + 1}^2 = 0`.
@@ -2466,7 +2488,11 @@ def diop_general_pythagorean(eq, param=symbols("m", integer=True)):
     var, coeff, diop_type  = classify_diop(eq)
 
     if diop_type == "general_pythagorean":
-        return _diop_general_pythagorean(var, coeff, param)
+        s = _diop_general_pythagorean(var, coeff, param)
+        if not "dict" in kwargs:
+            return s
+        else:
+            return dict(zip(ordered(var), soln))
 
 
 def _diop_general_pythagorean(var, coeff, t):
@@ -2509,7 +2535,7 @@ def _diop_general_pythagorean(var, coeff, t):
     return tuple(sol)
 
 
-def diop_general_sum_of_squares(eq, limit=1):
+def diop_general_sum_of_squares(eq, limit=1, **kwargs):
     """
     Solves the equation `x_{1}^2 + x_{2}^2 + . . . + x_{n}^2 - k = 0`.
 
@@ -2549,7 +2575,11 @@ def diop_general_sum_of_squares(eq, limit=1):
     var, coeff, diop_type = classify_diop(eq)
 
     if diop_type == "general_sum_of_squares":
-        return _diop_general_sum_of_squares(var, coeff, limit)
+        s = _diop_general_sum_of_squares(var, coeff, limit)
+        if not "dict" in kwargs:
+            return dict(zip(vars, zip(*s)))
+        else:
+            return s
 
 
 def _diop_general_sum_of_squares(var, coeff, limit=1):
